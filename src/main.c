@@ -30,12 +30,17 @@ void process_input(GLFWwindow *window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void clean_up();
 
-
 // triangle
 float vertices[] = {
-    -0.5f, -0.5f, 0,
-     0.5f, -0.5f, 0,
-     0, 0.5, 0
+     0.5f,  0.5f, 0.0f,  // top right
+     0.5f, -0.5f, 0.0f,  // bottom right
+    -0.5f, -0.5f, 0.0f,  // bottom left
+    -0.5f,  0.5f, 0.0f   // top left 
+};
+
+int indices[] = {
+    0,1,3,  // T1
+    1,2,3   // T2
 };
 
 int main(void)
@@ -49,12 +54,16 @@ int main(void)
 
     // vertex buffer object
     unsigned int VBO;
-    // vertex array object (holds VBO configuration)
+    // element buffer object
+    unsigned int EBO;
+    // vertex array object (VAO then stores last bound GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER and vertex attribute configuration !! Cerefull VAO also stores unBindCalls !!)
     unsigned int VAO;
     
-    // 1. create buffers & VAO
+    // 1. create buffers
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
     glGenVertexArrays(1, &VAO);
+
 
     // 2. bind VAO -> VAO then stores last bound GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER and vertex attribute configuration !! Cerefull VAO also stores unBindCalls !!
     glBindVertexArray(VAO);
@@ -62,6 +71,10 @@ int main(void)
     // 3. copy our data to buffers for OpenGL to use
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    gl_check_error();
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     gl_check_error();
 
     // then set our vertex attributes pointers
@@ -110,8 +123,8 @@ int main(void)
     {
         process_input(window);
         glClear(GL_COLOR_BUFFER_BIT);
-        
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     
         glfwPollEvents();
         glfwSwapBuffers(window);
@@ -205,6 +218,7 @@ void init(GLFWwindow** window)
 
 void process_input(GLFWwindow *window)
 {
+
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     
