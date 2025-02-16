@@ -32,11 +32,19 @@ void clean_up();
 
 
 // triangle
+
 float vertices[] = {
-    -0.5f, -0.5f, 0,
-     0.5f, -0.5f, 0,
-     0, 0.5, 0
-};
+    // T1
+    -1.0f,-0.0f, 0.0f,
+     0.0f, 0.0f, 0.0f,
+     0.0f, 1.0f, 0.0f,
+    // T2
+     0.0f,-1.0f, 0.0f,
+     0.0f, 0.0f, 0.0f,
+     1.0f, 0.0f, 0.0f,
+
+};  
+
 
 int main(void)
 {
@@ -64,10 +72,6 @@ int main(void)
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     gl_check_error();
 
-    // then set our vertex attributes pointers
-    // 0 - corresponds to location qualifier in vertex shader layout (location = 0) in vec3 aPos;
-    // 3, GL_FLOAT TAKE 3 times float size from vertex of total size 6*float
-    // offset skip position attribute (3 floats x,y,z)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
@@ -111,7 +115,7 @@ int main(void)
         process_input(window);
         glClear(GL_COLOR_BUFFER_BIT);
         
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
     
         glfwPollEvents();
         glfwSwapBuffers(window);
