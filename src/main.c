@@ -31,14 +31,12 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void clean_up();
 
 
-// cube
+// triangle
 float vertices[] = {
     -0.5f, -0.5f, 0,
      0.5f, -0.5f, 0,
-     0.5f,  0.5f, 0
+     0, 0.5, 0
 };
-
-
 
 int main(void)
 {
@@ -51,14 +49,11 @@ int main(void)
 
     // vertex buffer object
     unsigned int VBO;
-    // element buffer object (index buffer)
-    unsigned int EBO;
     // vertex array object (holds VBO configuration)
     unsigned int VAO;
     
     // 1. create buffers & VAO
     glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
     glGenVertexArrays(1, &VAO);
 
     // 2. bind VAO -> VAO then stores last bound GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER and vertex attribute configuration !! Cerefull VAO also stores unBindCalls !!
@@ -69,11 +64,6 @@ int main(void)
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     gl_check_error();
 
-    // EBO
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-    // gl_check_error();
-
     // then set our vertex attributes pointers
     // 0 - corresponds to location qualifier in vertex shader layout (location = 0) in vec3 aPos;
     // 3, GL_FLOAT TAKE 3 times float size from vertex of total size 6*float
@@ -83,48 +73,6 @@ int main(void)
 
     // unbind VAO
     glBindVertexArray(0);
-
-    #pragma region texture
-
-    unsigned int textures[2];
-    glGenTextures(2, textures);
-    glBindTexture(GL_TEXTURE_2D, textures[0]);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    int width, height, nrChannels;
-    unsigned char *data = stbi_load("resources/textures/wall.jpg", &width, &height, &nrChannels, 0); 
-    my_assert(data, "failed to load texture");
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    stbi_image_free(data);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, textures[1]);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    stbi_set_flip_vertically_on_load(true);
-
-    unsigned char *data2 = stbi_load("resources/textures/awesomeface.png", &width, &height, &nrChannels, 0); 
-    my_assert(data2, "failed to load texture");
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data2);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    stbi_image_free(data2);
-
-    #pragma endregion
 
     #pragma region shader program creation
     my_assert(create_shader(&vert_shader, GL_VERTEX_SHADER, "./shaders/vertex.vert"), "failed to create VETEXE SHADER");
@@ -148,15 +96,8 @@ int main(void)
     glDeleteShader(frag_shader);
     #pragma endregion
 
-
     // select active program(shaders) for rendering
     glUseProgram(main_program);
-
-    // set uniforms
-    // set texture units to texture samplers
-    glUniform1i(glGetUniformLocation(main_program, "texture1"), 0);
-    glUniform1i(glGetUniformLocation(main_program, "texture2"), 1);
-
     // select active Vertex array object (VBO + VBO configuration) for rendering
     glBindVertexArray(VAO);
 
@@ -168,11 +109,9 @@ int main(void)
     while(!glfwWindowShouldClose(window))
     {
         process_input(window);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
         
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
-    
-        // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
     
         glfwPollEvents();
         glfwSwapBuffers(window);
@@ -266,12 +205,8 @@ void init(GLFWwindow** window)
 
 void process_input(GLFWwindow *window)
 {
-    // vec3 cam_right = {0,0,0};
-
-    // if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    //     glfwSetWindowShouldClose(window, true);
-
-    // const float camera_speed = 0.05f; // adjust accordingly
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
     
     // if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     
@@ -294,6 +229,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void clean_up()
 {
-    my_log("cleaned up\n");
     glfwTerminate();
+    my_log("cleaned up\n");
 }
