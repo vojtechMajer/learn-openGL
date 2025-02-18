@@ -21,6 +21,11 @@
 
 #define SHADER_ERROR_LOG_SIZE 512
 
+#define t1 0
+#define t2 1
+
+#define TRIANGLE_COUNT 2
+
 bool create_shader(unsigned int* shader_obj, GLenum shader_type, const char* path);
 
 void check_program_linking(unsigned int shader_program);
@@ -31,20 +36,21 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void clean_up();
 
 
-// triangle
-
-float vertices[] = {
-    // T1
+float vertices[TRIANGLE_COUNT][9] = {
+    {
     -1.0f,-0.0f, 0.0f,
      0.0f, 0.0f, 0.0f,
      0.0f, 1.0f, 0.0f,
-    // T2
+    },
+    {
      0.0f,-1.0f, 0.0f,
      0.0f, 0.0f, 0.0f,
      1.0f, 0.0f, 0.0f,
-
+    }
+    
 };  
 
+// Now create the same 2 triangles using two different VAOs and VBOs for their data: solution.
 
 int main(void)
 {
@@ -56,27 +62,33 @@ int main(void)
     unsigned int frag_shader;
 
     // vertex buffer object
-    unsigned int VBO;
+    unsigned int VBOS[TRIANGLE_COUNT];
     // vertex array object (holds VBO configuration)
-    unsigned int VAO;
+    unsigned int VAOS[TRIANGLE_COUNT];
     
     // 1. create buffers & VAO
-    glGenBuffers(1, &VBO);
-    glGenVertexArrays(1, &VAO);
-
-    // 2. bind VAO -> VAO then stores last bound GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER and vertex attribute configuration !! Cerefull VAO also stores unBindCalls !!
-    glBindVertexArray(VAO);
+    glGenBuffers(TRIANGLE_COUNT, VBOS);
+    glGenVertexArrays(TRIANGLE_COUNT, VAOS);
     
     // 3. copy our data to buffers for OpenGL to use
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    gl_check_error();
+    for (int i = 0; i < TRIANGLE_COUNT; i++)
+    {
+        // 2. bind VAO -> VAO then stores last bound GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER and vertex attribute configuration !! Cerefull VAO also stores unBindCalls !!
+        glBindVertexArray(VAOS[i]);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, VBOS[i]);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[i]), vertices[i], GL_STATIC_DRAW);
+        gl_check_error();
 
-    // unbind VAO
-    glBindVertexArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+        gl_check_error();
+
+        // unbind VAO - úplně to to nemusí být, ale je to více clear
+        glBindVertexArray(0);
+
+    }
+    
 
     #pragma region shader program creation
     my_assert(create_shader(&vert_shader, GL_VERTEX_SHADER, "./shaders/vertex.vert"), "failed to create VETEXE SHADER");
@@ -102,8 +114,6 @@ int main(void)
 
     // select active program(shaders) for rendering
     glUseProgram(main_program);
-    // select active Vertex array object (VBO + VBO configuration) for rendering
-    glBindVertexArray(VAO);
 
     // set clear color
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -115,7 +125,12 @@ int main(void)
         process_input(window);
         glClear(GL_COLOR_BUFFER_BIT);
         
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(VAOS[t1]);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+            
+        glBindVertexArray(VAOS[t2]);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
     
         glfwPollEvents();
         glfwSwapBuffers(window);
