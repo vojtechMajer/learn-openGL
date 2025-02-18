@@ -47,7 +47,6 @@ float vertices[TRIANGLE_COUNT][9] = {
      0.0f, 0.0f, 0.0f,
      1.0f, 0.0f, 0.0f,
     }
-    
 };  
 
 // Now create the same 2 triangles using two different VAOs and VBOs for their data: solution.
@@ -57,9 +56,9 @@ int main(void)
     GLFWwindow* window;
     init(&window);
 
-    unsigned int main_program;
+    unsigned int main_programs[TRIANGLE_COUNT];
     unsigned int vert_shader;
-    unsigned int frag_shader;
+    unsigned int frag_shaders[TRIANGLE_COUNT];
 
     // vertex buffer object
     unsigned int VBOS[TRIANGLE_COUNT];
@@ -86,34 +85,40 @@ int main(void)
 
         // unbind VAO - úplně to to nemusí být, ale je to více clear
         glBindVertexArray(0);
-
     }
-    
 
     #pragma region shader program creation
     my_assert(create_shader(&vert_shader, GL_VERTEX_SHADER, "./shaders/vertex.vert"), "failed to create VETEXE SHADER");
-    my_assert(create_shader(&frag_shader, GL_FRAGMENT_SHADER, "./shaders/fragment.frag"), "failed to create FRAGMENT SHADER");
-
-    main_program = glCreateProgram();
+    my_assert(create_shader(frag_shaders+t1, GL_FRAGMENT_SHADER, "./shaders/t1.frag"), "failed to create FRAGMENT SHADER");
+    my_assert(create_shader(frag_shaders+t2, GL_FRAGMENT_SHADER, "./shaders/t2.frag"), "failed to create FRAGMENT SHADER");
     
+    
+    main_programs[t1] = glCreateProgram();
+    main_programs[t2] = glCreateProgram();
+
     // Attach shader stages
-    glAttachShader(main_program, vert_shader);
+    glAttachShader(main_programs[t1], vert_shader);
+    glAttachShader(main_programs[t2], vert_shader);
     gl_check_error();
 
-    glAttachShader(main_program, frag_shader);
+
+    glAttachShader(main_programs[t1], frag_shaders[t1]);
+    gl_check_error();
+    glAttachShader(main_programs[t2], frag_shaders[t2]);
     gl_check_error();
 
     // link shader stages
-    glLinkProgram(main_program);
-    check_program_linking(main_program);
+    glLinkProgram(main_programs[t1]);
+    check_program_linking(main_programs[t1]);
+
+    glLinkProgram(main_programs[t2]);
+    check_program_linking(main_programs[t2]);
 
     // remove now uneneccesary shaders
     glDeleteShader(vert_shader);
-    glDeleteShader(frag_shader);
+    glDeleteShader(frag_shaders[t1]);
+    glDeleteShader(frag_shaders[t2]);
     #pragma endregion
-
-    // select active program(shaders) for rendering
-    glUseProgram(main_program);
 
     // set clear color
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -125,13 +130,15 @@ int main(void)
         process_input(window);
         glClear(GL_COLOR_BUFFER_BIT);
         
+        glUseProgram(main_programs[t1]);
         glBindVertexArray(VAOS[t1]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
             
+        
+        glUseProgram(main_programs[t2]);
         glBindVertexArray(VAOS[t2]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-    
         glfwPollEvents();
         glfwSwapBuffers(window);
     }
