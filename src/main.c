@@ -30,13 +30,13 @@ void process_input(GLFWwindow *window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void clean_up();
 
-
 // triangle
 float vertices[] = {
-    -0.5f, -0.5f, 0,
-     0.5f, -0.5f, 0,
-     0, 0.5, 0
-};
+    // positions         // colors
+     0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
+    -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
+     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
+};    
 
 int main(void)
 {
@@ -65,8 +65,14 @@ int main(void)
     gl_check_error();
 
     // Attribute configuration
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    
+    // color
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) (sizeof(float) * 3));
+    glEnableVertexAttribArray(1);
+
 
     #pragma region shader program creation
     my_assert(create_shader(&vert_shader, GL_VERTEX_SHADER, "./shaders/vertex.vert"), "failed to create VETEXE SHADER");
@@ -90,9 +96,6 @@ int main(void)
     glDeleteShader(frag_shader);
     #pragma endregion
 
-    // Add uniforms
-    int color_loc = glGetUniformLocation(main_program, "my_color");
-
     glUseProgram(main_program);
     // set clear color
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -102,11 +105,7 @@ int main(void)
     while(!glfwWindowShouldClose(window))
     {
         process_input(window);
-                
         glClear(GL_COLOR_BUFFER_BIT);
-
-        glUniform3f(color_loc, 0.0f, (sin(glfwGetTime()) / 2.0f) + 0.5f, 0.0f);
-        gl_check_error();
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
     
