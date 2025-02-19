@@ -64,15 +64,9 @@ int main(void)
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     gl_check_error();
 
-    // then set our vertex attributes pointers
-    // 0 - corresponds to location qualifier in vertex shader layout (location = 0) in vec3 aPos;
-    // 3, GL_FLOAT TAKE 3 times float size from vertex of total size 6*float
-    // offset skip position attribute (3 floats x,y,z)
+    // Attribute configuration
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-
-    // unbind VAO
-    glBindVertexArray(0);
 
     #pragma region shader program creation
     my_assert(create_shader(&vert_shader, GL_VERTEX_SHADER, "./shaders/vertex.vert"), "failed to create VETEXE SHADER");
@@ -96,11 +90,8 @@ int main(void)
     glDeleteShader(frag_shader);
     #pragma endregion
 
-    // select active program(shaders) for rendering
-    glUseProgram(main_program);
-    // select active Vertex array object (VBO + VBO configuration) for rendering
-    glBindVertexArray(VAO);
 
+    glUseProgram(main_program);
     // set clear color
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     // draw in wireframe
@@ -109,8 +100,15 @@ int main(void)
     while(!glfwWindowShouldClose(window))
     {
         process_input(window);
+                
         glClear(GL_COLOR_BUFFER_BIT);
-        
+
+        // Add uniforms
+        int color_loc = glGetUniformLocation(main_program, "my_color");
+        // update uniform value    
+        glUniform3f(color_loc, 0.0f, (sin(glfwGetTime()) / 2.0f) + 0.5f, 0.0f);
+        gl_check_error();
+
         glDrawArrays(GL_TRIANGLES, 0, 3);
     
         glfwPollEvents();
