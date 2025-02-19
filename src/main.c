@@ -90,6 +90,8 @@ int main(void)
     glDeleteShader(frag_shader);
     #pragma endregion
 
+    // Add uniforms
+    int color_loc = glGetUniformLocation(main_program, "my_color");
 
     glUseProgram(main_program);
     // set clear color
@@ -103,9 +105,6 @@ int main(void)
                 
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Add uniforms
-        int color_loc = glGetUniformLocation(main_program, "my_color");
-        // update uniform value    
         glUniform3f(color_loc, 0.0f, (sin(glfwGetTime()) / 2.0f) + 0.5f, 0.0f);
         gl_check_error();
 
