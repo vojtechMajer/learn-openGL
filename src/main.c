@@ -38,6 +38,9 @@ float vertices[] = {
      0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
 };    
 
+const float speed = 0.01;
+float offset_x = 0, offset_y = 0;
+
 int main(void)
 {
     GLFWwindow* window;
@@ -96,6 +99,10 @@ int main(void)
     glDeleteShader(frag_shader);
     #pragma endregion
 
+
+    int offset_loc = glGetUniformLocation(main_program, "offset");
+
+
     glUseProgram(main_program);
     // set clear color
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -106,7 +113,7 @@ int main(void)
     {
         process_input(window);
         glClear(GL_COLOR_BUFFER_BIT);
-
+        glUniform2f(offset_loc, offset_x, offset_y);
         glDrawArrays(GL_TRIANGLES, 0, 3);
     
         glfwPollEvents();
@@ -204,17 +211,15 @@ void process_input(GLFWwindow *window)
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     
-    // if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    
-    // if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    
-    // if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    // {
-    // }
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        offset_y += speed;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        offset_y -= speed;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        offset_x += speed;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        offset_x -= speed;
 
-    // if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    // {
-    // }
 
 }
 
