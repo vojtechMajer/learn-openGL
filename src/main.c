@@ -39,9 +39,9 @@ float vertices[] = {
     -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
 };
 
-int indices[] = {
-    3,2,1,
-    0,3,1
+unsigned int indices[] = {
+    0,1,3,
+    1,2,3
 };
 
 int main(void)
@@ -83,18 +83,23 @@ int main(void)
     glEnableVertexAttribArray(0);
 
     // color
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) (sizeof(float)*3));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) (sizeof(float)*3));
     glEnableVertexAttribArray(1);
 
     // tex coord
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) (sizeof(float) * 6));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) (sizeof(float) * 6));
     glEnableVertexAttribArray(2);
 
     // Textury
-    unsigned int texture;
-    glGenTextures(1, &texture);
+    unsigned int texture1, texture2;
+    glGenTextures(1, &texture1);
+    glGenTextures(1, &texture2);
 
-    glBindTexture(GL_TEXTURE_2D, texture);
+    stbi_set_flip_vertically_on_load(true);
+
+
+
+    glBindTexture(GL_TEXTURE_2D, texture1);
     // textura se opakuje na x i na y
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -106,13 +111,35 @@ int main(void)
 
     int width, height, channels;
     unsigned char* data =  stbi_load("./resources/textures/wall.jpg", &width, &height, &channels, 0);
-
     my_assert(data, "Failed to load image");
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
-
     stbi_image_free(data);
+    
+    // TEXTURE 2
+    glBindTexture(GL_TEXTURE_2D, texture2);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    data =  stbi_load("./resources/textures/awesomeface.png", &width, &height, &channels, 0);
+    my_assert(data, "Failed to load image");
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_image_free(data);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+    
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture2);
 
     #pragma region shader program creation
     my_assert(create_shader(&vert_shader, GL_VERTEX_SHADER, "./shaders/vertex.vert"), "failed to create VETEXE SHADER");
@@ -137,18 +164,23 @@ int main(void)
     #pragma endregion
 
     glUseProgram(main_program);
+
+    // Uniforms
+    glUniform1i(glGetUniformLocation(main_program, "texture1"), 0); // assign texture 0
+    glUniform1i(glGetUniformLocation(main_program, "texture2"), 1); // assign texture 1
+
     // set clear color
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     // draw in wireframe
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        
+    
     while(!glfwWindowShouldClose(window))
     {
         process_input(window);
         glClear(GL_COLOR_BUFFER_BIT);
 
         //glDrawArrays(GL_TRIANGLES, 0, 3);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, indices);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     
         glfwPollEvents();
         glfwSwapBuffers(window);
