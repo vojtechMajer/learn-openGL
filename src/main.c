@@ -32,11 +32,17 @@ void clean_up();
 
 // triangle
 float vertices[] = {
-    // positions         // Texture coordinates
-     0.5f, -0.5f, 0.0f,  1.0, 0.0,   // bottom right
-    -0.5f, -0.5f, 0.0f,  0.0, 0.0,   // bottom left
-     0.0f,  0.5f, 0.0f,  0.5, 1.0    // top
-};    
+    // positions          // colors           // texture coords
+     0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+     0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+    -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+};
+
+int indices[] = {
+    3,2,1,
+    0,3,1
+};
 
 int main(void)
 {
@@ -51,10 +57,13 @@ int main(void)
     unsigned int VBO;
     // vertex array object (holds VBO configuration)
     unsigned int VAO;
+
+    unsigned int EBO;
     
     // 1. create buffers & VAO
     glGenBuffers(1, &VBO);
     glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &EBO);
 
     // 2. bind VAO -> VAO then stores last bound GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER and vertex attribute configuration !! Cerefull VAO also stores unBindCalls !!
     glBindVertexArray(VAO);
@@ -64,14 +73,22 @@ int main(void)
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     gl_check_error();
 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    gl_check_error();
+
     // Attribute configuration
     // position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    
+
     // color
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) (sizeof(float) * 3));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) (sizeof(float)*3));
     glEnableVertexAttribArray(1);
+
+    // tex coord
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) (sizeof(float) * 6));
+    glEnableVertexAttribArray(2);
 
     // Textury
     unsigned int texture;
@@ -85,11 +102,12 @@ int main(void)
     // při přechodu na nižší textury 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     // přechod na vyšší
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int width, height, channels;
     unsigned char* data =  stbi_load("./resources/textures/wall.jpg", &width, &height, &channels, 0);
+
+    my_assert(data, "Failed to load image");
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -129,7 +147,8 @@ int main(void)
         process_input(window);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        //glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, indices);
     
         glfwPollEvents();
         glfwSwapBuffers(window);

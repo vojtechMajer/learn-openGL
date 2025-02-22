@@ -21,6 +21,7 @@ run: $(EXEC)
 	clear
 	$(EXEC)
 
+
 .PHONY: clean
 clean:
 		rm -rf $(SRCDIR)/*.o
