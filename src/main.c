@@ -54,10 +54,9 @@ int main(void)
     unsigned int frag_shader;
 
     // vertex buffer object
-    unsigned int VBO;
     // vertex array object (holds VBO configuration)
     unsigned int VAO;
-
+    unsigned int VBO;
     unsigned int EBO;
     
     // 1. create buffers & VAO
@@ -97,8 +96,6 @@ int main(void)
 
     stbi_set_flip_vertically_on_load(true);
 
-
-
     glBindTexture(GL_TEXTURE_2D, texture1);
     // textura se opakuje na x i na y
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -110,37 +107,24 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int width, height, channels;
-    unsigned char* data =  stbi_load("./resources/textures/wall.jpg", &width, &height, &channels, 0);
+    unsigned char* data =  stbi_load("./resources/textures/awesomeface.png", &width, &height, &channels, 0);
     my_assert(data, "Failed to load image");
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(data);
     
-    // TEXTURE 2
-    glBindTexture(GL_TEXTURE_2D, texture2);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    data =  stbi_load("./resources/textures/awesomeface.png", &width, &height, &channels, 0);
-    my_assert(data, "Failed to load image");
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(data);
-
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture1);
-    
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, texture2);
 
+    // Matice
+    // translation matrix
+    mat4 m_transform = GLM_MAT4_IDENTITY_INIT;
+
+    glm_rotate(m_transform, glm_rad(90), (vec3) {0,0,1});
+
+    glm_scale(m_transform, (vec3) {2,2,2});    
+    
     #pragma region shader program creation
     my_assert(create_shader(&vert_shader, GL_VERTEX_SHADER, "./shaders/vertex.vert"), "failed to create VETEXE SHADER");
     my_assert(create_shader(&frag_shader, GL_FRAGMENT_SHADER, "./shaders/fragment.frag"), "failed to create FRAGMENT SHADER");
@@ -167,7 +151,8 @@ int main(void)
 
     // Uniforms
     glUniform1i(glGetUniformLocation(main_program, "texture1"), 0); // assign texture 0
-    glUniform1i(glGetUniformLocation(main_program, "texture2"), 1); // assign texture 1
+    glUniformMatrix4fv(glGetUniformLocation(main_program, "translation_mat"), 1, GL_FALSE, m_transform[0]);
+
 
     // set clear color
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
