@@ -118,19 +118,34 @@ int main(void)
     glBindTexture(GL_TEXTURE_2D, texture1);
 
     // Matice
-    // translation matrix
-    mat4 m_transform = GLM_MAT4_IDENTITY_INIT;
-
-    glm_rotate(m_transform, glm_rad(90), (vec3) {0,0,1});
-
-    glm_scale(m_transform, (vec3) {2,2,2});    
+    // Transformace a jejich uniformy
     
+    // transformace z local/object space na world space (translate, rotate, scale)
+    mat4 model = GLM_MAT4_IDENTITY_INIT;
+    // world space na view space (jako bychom jsem se dívali na objekty z pohledu kamery) posun kamery dozadu = posun celé scény dopředu
+    mat4 view = GLM_MAT4_IDENTITY_INIT;
+    // aplikace perspektivní nebo orthographické matice
+    mat4 projection = GLM_MAT4_IDENTITY_INIT;
+    
+    // move
+    glm_translate(model, (vec3){1,0,0});
+    // half size
+    glm_scale(model, (vec3) {0.5,0.5,0.5});
+    // rotate 45 deg
+    glm_rotate(model, glm_rad(45), (vec3) {1,0,0});
+
+    // odsunu se dozadu od všech objektů
+    glm_translate(view, (vec3){0,0,-10});
+
+    glm_perspective(glm_rad(45),(float) WINDOW_WIDTH/(float) WINDOW_HEIGHT, 0.1, 100.0f, projection);
+    
+
     #pragma region shader program creation
     my_assert(create_shader(&vert_shader, GL_VERTEX_SHADER, "./shaders/vertex.vert"), "failed to create VETEXE SHADER");
     my_assert(create_shader(&frag_shader, GL_FRAGMENT_SHADER, "./shaders/fragment.frag"), "failed to create FRAGMENT SHADER");
 
     main_program = glCreateProgram();
-    
+
     // Attach shader stages
     glAttachShader(main_program, vert_shader);
     gl_check_error();
@@ -150,15 +165,23 @@ int main(void)
     glUseProgram(main_program);
 
     // Uniforms
+    glUniformMatrix4fv(glGetUniformLocation(main_program, "model"), 1, GL_FALSE, model[0]);
+    gl_check_error();
+    glUniformMatrix4fv(glGetUniformLocation(main_program, "view"), 1, GL_FALSE, view[0]);
+    gl_check_error();
+    glUniformMatrix4fv(glGetUniformLocation(main_program, "projection"), 1, GL_FALSE, projection[0]);
+    gl_check_error();
+
+
     glUniform1i(glGetUniformLocation(main_program, "texture1"), 0); // assign texture 0
-    glUniformMatrix4fv(glGetUniformLocation(main_program, "translation_mat"), 1, GL_FALSE, m_transform[0]);
 
 
     // set clear color
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    // glEnable(GL_DEPTH_TEST);
     // draw in wireframe
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    
+
     while(!glfwWindowShouldClose(window))
     {
         process_input(window);
@@ -283,6 +306,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void clean_up()
 {
+    gl_check_error();
     glfwTerminate();
     my_log("cleaned up\n");
 }
